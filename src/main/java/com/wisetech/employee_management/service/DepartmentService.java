@@ -1,7 +1,7 @@
 package com.wisetech.employee_management.service;
 
-import com.wisetech.employee_management.models.Department;
-import com.wisetech.employee_management.repository.DepartmentRepository;
+import com.wisetech.employee_management.persistence.Department;
+import com.wisetech.employee_management.persistence.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

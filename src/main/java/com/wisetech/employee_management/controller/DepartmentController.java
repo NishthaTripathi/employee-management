@@ -1,6 +1,6 @@
 package com.wisetech.employee_management.controller;
 
-import com.wisetech.employee_management.models.Department;
+import com.wisetech.employee_management.persistence.Department;
 import com.wisetech.employee_management.service.DepartmentService;
 import org.springframework.web.bind.annotation.*;
 

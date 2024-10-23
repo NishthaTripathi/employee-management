@@ -1,36 +1,37 @@
-package com.wisetech.employee_management.models;
+package com.wisetech.employee_management.persistence;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
-
 import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(name = "DEPARTMENT")
+@Table(name = "EMPLOYEE")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-public class Department {
+public class Employee {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EMP_SEQ")
+    @SequenceGenerator(name = "EMP_SEQ", sequenceName = "EMP_SEQ", allocationSize = 1)
     @Column(name = "ID")
-    private Long departmentId;
+    private Long employeeId;
 
-    @Column(name = "NAME", nullable = false, length = 100)
-    private String departmentName;
+    @Column(name = "FIRST_NAME", nullable = false)
+    private String firstName;
 
-    @Column(name = "MANDATORY", nullable = false)
-    private Boolean isMandatory = false;
+    @Column(name = "LAST_NAME", nullable = false)
+    private String lastName;
 
-    @Column(name = "READ_ONLY", nullable = false)
-    private Boolean isReadOnly = false;
-
-    @ManyToMany(mappedBy = "departments")
+    @ManyToMany
+    @JoinTable(
+            name = "EMPLOYEE_DEPARTMENT",
+            joinColumns = @JoinColumn(name = "EMPLOYEE_ID"), inverseJoinColumns = @JoinColumn(name = "DEPARTMENT_ID"))
     @ToString.Exclude
-    private Set<Employee> employees;
+    private Set<Department> departments;
 
     @Override
     public final boolean equals(Object o) {
@@ -39,8 +40,8 @@ public class Department {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Department that = (Department) o;
-        return getDepartmentId() != null && Objects.equals(getDepartmentId(), that.getDepartmentId());
+        Employee employee = (Employee) o;
+        return getEmployeeId() != null && Objects.equals(getEmployeeId(), employee.getEmployeeId());
     }
 
     @Override
@@ -48,4 +49,3 @@ public class Department {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 }
-

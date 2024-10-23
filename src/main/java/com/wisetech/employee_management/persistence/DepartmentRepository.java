@@ -1,6 +1,5 @@
-package com.wisetech.employee_management.repository;
+package com.wisetech.employee_management.persistence;
 
-import com.wisetech.employee_management.models.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DepartmentRepository extends JpaRepository<Department, Long> {

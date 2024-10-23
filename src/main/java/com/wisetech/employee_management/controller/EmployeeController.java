@@ -1,6 +1,6 @@
 package com.wisetech.employee_management.controller;
 
-import com.wisetech.employee_management.models.Employee;
+import com.wisetech.employee_management.persistence.Employee;
 import com.wisetech.employee_management.service.EmployeeService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,4 +22,3 @@ public class EmployeeController {
         return employeeService.saveEmployee(employee);
     }
 }
-
