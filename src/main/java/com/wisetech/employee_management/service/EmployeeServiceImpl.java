@@ -47,40 +47,41 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee updateEmployee(Long id, Employee updatedEmployee) {
-
         validateDepartments(updatedEmployee.getDepartments());
 
         return employeeRepository.findById(id)
                 .map(existingEmployee -> {
-                    Set<Department> existingMandatoryDepartments = existingEmployee.getDepartments()
-                            .stream()
-                            .filter(Department::getMandatory)
-                            .collect(Collectors.toSet());
 
                     Set<Department> newDepartments = new HashSet<>(updatedEmployee.getDepartments());
-
-                    newDepartments.addAll(existingMandatoryDepartments);
+                    newDepartments.addAll(getMandatoryDepartments(existingEmployee));
                     existingEmployee.setDepartments(newDepartments);
                     existingEmployee.setFirstName(updatedEmployee.getFirstName());
                     existingEmployee.setLastName(updatedEmployee.getLastName());
 
                     return employeeRepository.save(existingEmployee);
                 })
-                .orElseThrow(() -> new ResourceNotFoundException("Employee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee with id :" + id + "does not exists"));
     }
 
     @Override
     public void deleteEmployee(Long id) {
         if (!employeeRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Employee");
+            throw new ResourceNotFoundException("Employee with id :" + id + "does not exists");
         }
         employeeRepository.deleteById(id);
+    }
+
+    private Set<Department> getMandatoryDepartments(Employee employee) {
+        return employee.getDepartments()
+                .stream()
+                .filter(Department::getMandatory)
+                .collect(Collectors.toSet());
     }
 
     private void validateDepartments(Set<Department> departments) {
         for (Department department : departments) {
             if (!departmentRepository.existsByName(department.getName()))
-                throw new ResourceNotFoundException("Department");
+                throw new ResourceNotFoundException("Department  with name: " + department.getName() + " does not exists");
         }
     }
 }

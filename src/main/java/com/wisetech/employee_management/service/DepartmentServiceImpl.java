@@ -16,7 +16,6 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
 
-
     public DepartmentServiceImpl(DepartmentRepository departmentRepository) {
         this.departmentRepository = departmentRepository;
     }
@@ -33,15 +32,16 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public Department getDepartmentById(Long id) {
-        return departmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Department"));
+        return departmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Department not found, id:" + id));
     }
 
     @Override
     public Department updateDepartment(Long id, Department updatedDepartment) {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Department"));
-        if (department.getReadOnly()) {
-            handleReadOnlyDepartmentUpdate(department, updatedDepartment);
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found, id: " + id));
+
+        if (department.getReadOnly() && updatedDepartment.getReadOnly()) {
+            throw new ReadOnlyDepartmentException();
         }
 
         department.setName(updatedDepartment.getName());
@@ -53,18 +53,11 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public void deleteDepartment(Long id) {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Department"));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found, id: " + id));
 
         if (department.getReadOnly()) {
             throw new ReadOnlyDepartmentException();
         }
         departmentRepository.delete(department);
-    }
-
-
-    private void handleReadOnlyDepartmentUpdate(Department department, Department updatedDepartment) {
-        if (updatedDepartment.getReadOnly()) {
-            throw new ReadOnlyDepartmentException();
-        }
     }
 }
