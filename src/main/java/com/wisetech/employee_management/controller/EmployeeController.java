@@ -2,13 +2,14 @@ package com.wisetech.employee_management.controller;
 
 import com.wisetech.employee_management.persistence.Employee;
 import com.wisetech.employee_management.service.EmployeeService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping("/employee")
 public class EmployeeController {
 
     private final EmployeeService employeeService;
@@ -30,13 +31,13 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
+    public ResponseEntity<Employee> createEmployee(@Valid @RequestBody Employee employee) {
         Employee createdEmployee = employeeService.createEmployee(employee);
         return ResponseEntity.ok(createdEmployee);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee updatedEmployee) {
+    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @Valid @RequestBody Employee updatedEmployee) {
         Employee employee = employeeService.updateEmployee(id, updatedEmployee);
         return ResponseEntity.ok(employee);
     }

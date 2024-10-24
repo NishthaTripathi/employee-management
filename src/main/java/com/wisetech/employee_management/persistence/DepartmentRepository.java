@@ -7,7 +7,7 @@ import java.util.List;
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     //TODO: doc
-    boolean existsByDepartmentName(String departmentName);
+    boolean existsByName(String name);
 
-    List<Department> findAllByIsMandatoryTrue();
+    List<Department> findAllByMandatoryTrue();
 }

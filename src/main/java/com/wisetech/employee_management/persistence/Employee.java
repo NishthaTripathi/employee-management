@@ -1,10 +1,10 @@
 package com.wisetech.employee_management.persistence;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+
 
 import java.util.Set;
 
@@ -13,7 +13,9 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
+@Builder
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class Employee {
 
     @Id
@@ -22,16 +24,18 @@ public class Employee {
     @Column(name = "ID")
     private Long id;
 
+    @NotBlank( message = "First Name can not be null or empty")
     @Column(name = "NAME_FIRST", nullable = false)
     private String firstName;
 
+    @NotBlank( message = "Last Name can not be null or empty")
     @Column(name = "NAME_LAST", nullable = false)
     private String lastName;
 
     @ManyToMany
     @JoinTable(
             name = "EMPLOYEE_DEPARTMENT",
-            joinColumns = @JoinColumn(name = "EMPLOYEE_ID"), inverseJoinColumns = @JoinColumn(name = "DEPARTMENT_ID"))
+            joinColumns = @JoinColumn(name = "ID_EMPLOYEE"), inverseJoinColumns = @JoinColumn(name = "ID_DEPARTMENT"))
     private Set<Department> departments;
 
 }

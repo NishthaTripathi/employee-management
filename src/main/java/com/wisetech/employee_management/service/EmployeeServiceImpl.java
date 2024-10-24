@@ -28,7 +28,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee createEmployee(Employee employee) {
         validateDepartments(employee.getDepartments());
 
-        List<Department> mandatoryDepartments = departmentRepository.findAllByIsMandatoryTrue();
+        List<Department> mandatoryDepartments = departmentRepository.findAllByMandatoryTrue();
         employee.getDepartments().addAll(mandatoryDepartments);
         return employeeRepository.save(employee);
     }
@@ -41,7 +41,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee getEmployeeById(Long id) {
         return employeeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee"));
     }
 
 
@@ -54,7 +54,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .map(existingEmployee -> {
                     Set<Department> existingMandatoryDepartments = existingEmployee.getDepartments()
                             .stream()
-                            .filter(Department::getIsMandatory)
+                            .filter(Department::getMandatory)
                             .collect(Collectors.toSet());
 
                     Set<Department> newDepartments = new HashSet<>(updatedEmployee.getDepartments());
@@ -66,22 +66,21 @@ public class EmployeeServiceImpl implements EmployeeService {
 
                     return employeeRepository.save(existingEmployee);
                 })
-                .orElseThrow(() -> new ResourceNotFoundException("Employee", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee"));
     }
 
     @Override
     public void deleteEmployee(Long id) {
         if (!employeeRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Employee", id);
+            throw new ResourceNotFoundException("Employee");
         }
         employeeRepository.deleteById(id);
     }
 
     private void validateDepartments(Set<Department> departments) {
         for (Department department : departments) {
-            if (!departmentRepository.existsById(department.getDepartmentId())) {
-                throw new ResourceNotFoundException("Department", department.getDepartmentId());
-            }
+            if (!departmentRepository.existsByName(department.getName()))
+                throw new ResourceNotFoundException("Department");
         }
     }
 }
