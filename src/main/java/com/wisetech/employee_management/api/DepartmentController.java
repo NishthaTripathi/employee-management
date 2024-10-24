@@ -1,5 +1,8 @@
-package com.wisetech.employee_management.controller;
+package com.wisetech.employee_management.api;
 
+import com.wisetech.employee_management.exception.ReadOnlyDepartmentException;
+import com.wisetech.employee_management.exception.ResourceAlreadyExistsException;
+import com.wisetech.employee_management.exception.ResourceNotFoundException;
 import com.wisetech.employee_management.persistence.Department;
 import com.wisetech.employee_management.service.DepartmentService;
 import jakarta.validation.Valid;
@@ -29,27 +32,27 @@ public class DepartmentController {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) {
+    public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) throws ResourceNotFoundException {
         Department department = departmentService.getDepartmentById(id);
         return ResponseEntity.ok(department);
     }
 
     @PostMapping
-    public ResponseEntity<Department> createDepartment(@Valid @RequestBody Department department) {
+    public ResponseEntity<Department> createDepartment(@Valid @RequestBody Department department) throws ResourceAlreadyExistsException {
 
         Department createdDepartment = departmentService.createDepartment(department);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDepartment);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Department> updateDepartment(@PathVariable Long id, @RequestBody @Valid Department updatedDepartment) {
-        Department department = departmentService.updateDepartment(id, updatedDepartment);
+    @PutMapping
+    public ResponseEntity<Department> updateDepartment(@RequestBody @Valid Department updatedDepartment) throws ReadOnlyDepartmentException, ResourceNotFoundException {
+        Department department = departmentService.updateDepartment(updatedDepartment);
         return ResponseEntity.ok(department);
 
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) throws ReadOnlyDepartmentException, ResourceNotFoundException {
         departmentService.deleteDepartment(id);
         return ResponseEntity.ok().build();
     }

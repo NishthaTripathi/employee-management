@@ -1,6 +1,5 @@
 package com.wisetech.employee_management.persistence;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -32,7 +31,7 @@ public class Employee {
     @Column(name = "NAME_LAST", nullable = false)
     private String lastName;
 
-    @ManyToMany
+    @ManyToMany(cascade=CascadeType.REMOVE)
     @JoinTable(
             name = "EMPLOYEE_DEPARTMENT",
             joinColumns = @JoinColumn(name = "ID_EMPLOYEE"), inverseJoinColumns = @JoinColumn(name = "ID_DEPARTMENT"))

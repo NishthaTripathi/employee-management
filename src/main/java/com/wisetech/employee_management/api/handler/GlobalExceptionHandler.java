@@ -1,9 +1,10 @@
-package com.wisetech.employee_management.exception.handler;
+package com.wisetech.employee_management.api.handler;
 
 import com.wisetech.employee_management.exception.ReadOnlyDepartmentException;
 import com.wisetech.employee_management.exception.ResourceAlreadyExistsException;
 import com.wisetech.employee_management.exception.ResourceNotFoundException;
-import com.wisetech.employee_management.exception.error.ErrorResponse;
+import com.wisetech.employee_management.api.error.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  * Handles exceptions by creating an ErrorResponse and returning a ResponseEntity.
  */
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     /**
@@ -92,6 +94,7 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(String errorCode, String message, HttpStatus status) {
         ErrorResponse errorResponse = new ErrorResponse(errorCode, message);
+        log.error(message);
         return ResponseEntity.status(status).body(errorResponse);
     }
 }

@@ -1,6 +1,7 @@
 package com.wisetech.employee_management.service;
 
 import com.wisetech.employee_management.exception.ReadOnlyDepartmentException;
+import com.wisetech.employee_management.exception.ResourceAlreadyExistsException;
 import com.wisetech.employee_management.exception.ResourceNotFoundException;
 import com.wisetech.employee_management.persistence.Department;
 import com.wisetech.employee_management.persistence.DepartmentRepository;
@@ -8,8 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-//TODO: Move validation logic
-//TODO: Logging
+
 @Service
 
 public class DepartmentServiceImpl implements DepartmentService {
@@ -21,7 +21,10 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public Department createDepartment(Department department) {
+    public Department createDepartment(Department department) throws ResourceAlreadyExistsException {
+        if (departmentRepository.existsByName(department.getName())) {
+            throw new ResourceAlreadyExistsException("Department",department.getName());
+        }
         return departmentRepository.save(department);
     }
 
@@ -31,27 +34,23 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public Department getDepartmentById(Long id) {
+    public Department getDepartmentById(Long id) throws ResourceNotFoundException {
         return departmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Department not found, id:" + id));
     }
 
     @Override
-    public Department updateDepartment(Long id, Department updatedDepartment) {
-        Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found, id: " + id));
+    public Department updateDepartment(Department updatedDepartment) throws ResourceNotFoundException, ReadOnlyDepartmentException {
+        Department department = departmentRepository.findById(updatedDepartment.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found, id: " + updatedDepartment.getId()));
 
         if (department.getReadOnly() && updatedDepartment.getReadOnly()) {
             throw new ReadOnlyDepartmentException();
         }
-
-        department.setName(updatedDepartment.getName());
-        department.setReadOnly(updatedDepartment.getReadOnly());
-        department.setMandatory(updatedDepartment.getReadOnly());
-        return departmentRepository.save(department);
+        return departmentRepository.save(updatedDepartment);
     }
 
     @Override
-    public void deleteDepartment(Long id) {
+    public void deleteDepartment(Long id) throws ResourceNotFoundException, ReadOnlyDepartmentException {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found, id: " + id));
 

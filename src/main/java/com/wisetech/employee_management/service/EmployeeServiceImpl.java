@@ -5,7 +5,6 @@ import com.wisetech.employee_management.persistence.Department;
 import com.wisetech.employee_management.persistence.DepartmentRepository;
 import com.wisetech.employee_management.persistence.Employee;
 import com.wisetech.employee_management.persistence.EmployeeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -13,20 +12,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-//TODO: Move validation logic
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
 
-    @Autowired
-    private DepartmentRepository departmentRepository;
+    private final DepartmentRepository departmentRepository;
+
+
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, DepartmentRepository departmentRepository) {
+        this.employeeRepository = employeeRepository;
+        this.departmentRepository = departmentRepository;
+    }
 
     @Override
-    public Employee createEmployee(Employee employee) {
-        validateDepartments(employee.getDepartments());
+    public Employee createEmployee(Employee employee) throws ResourceNotFoundException {
+        validateIfDepartmentsExist(employee.getDepartments());
 
         List<Department> mandatoryDepartments = departmentRepository.findAllByMandatoryTrue();
         employee.getDepartments().addAll(mandatoryDepartments);
@@ -39,32 +41,27 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Employee getEmployeeById(Long id) {
+    public Employee getEmployeeById(Long id) throws ResourceNotFoundException {
         return employeeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee with id:" + id + " does not exist"));
     }
 
 
     @Override
-    public Employee updateEmployee(Long id, Employee updatedEmployee) {
-        validateDepartments(updatedEmployee.getDepartments());
+    public Employee updateEmployee(Employee updatedEmployee) throws ResourceNotFoundException {
+        validateIfDepartmentsExist(updatedEmployee.getDepartments());
 
-        return employeeRepository.findById(id)
-                .map(existingEmployee -> {
+        Employee existingEmployee = employeeRepository.findById(updatedEmployee.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Employee with id: " + updatedEmployee.getId() + " does not exist"));
 
-                    Set<Department> newDepartments = new HashSet<>(updatedEmployee.getDepartments());
-                    newDepartments.addAll(getMandatoryDepartments(existingEmployee));
-                    existingEmployee.setDepartments(newDepartments);
-                    existingEmployee.setFirstName(updatedEmployee.getFirstName());
-                    existingEmployee.setLastName(updatedEmployee.getLastName());
-
-                    return employeeRepository.save(existingEmployee);
-                })
-                .orElseThrow(() -> new ResourceNotFoundException("Employee with id :" + id + "does not exists"));
+        Set<Department> newDepartments = new HashSet<>(updatedEmployee.getDepartments());
+        newDepartments.addAll(getMandatoryDepartments(existingEmployee));
+        existingEmployee.setDepartments(newDepartments);
+        return employeeRepository.save(existingEmployee);
     }
 
     @Override
-    public void deleteEmployee(Long id) {
+    public void deleteEmployee(Long id) throws ResourceNotFoundException {
         if (!employeeRepository.existsById(id)) {
             throw new ResourceNotFoundException("Employee with id :" + id + "does not exists");
         }
@@ -78,10 +75,20 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .collect(Collectors.toSet());
     }
 
-    private void validateDepartments(Set<Department> departments) {
-        for (Department department : departments) {
-            if (!departmentRepository.existsByName(department.getName()))
-                throw new ResourceNotFoundException("Department  with name: " + department.getName() + " does not exists");
+    private void validateIfDepartmentsExist(Set<Department> departments) throws ResourceNotFoundException {
+
+        Set<String> departmentNames = departments.stream()
+                .map(Department::getName)
+                .collect(Collectors.toSet());
+
+        Set<String> existingNames = departmentRepository.findExistingDepartmentNames(departmentNames);
+
+        Set<String> missingDepartments = departmentNames.stream()
+                .filter(name -> !existingNames.contains(name))
+                .collect(Collectors.toSet());
+
+        if (!missingDepartments.isEmpty()) {
+            throw new ResourceNotFoundException("Departments with names: " + String.join(", ", missingDepartments) + " do not exist");
         }
     }
 }

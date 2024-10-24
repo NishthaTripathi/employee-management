@@ -1,6 +1,8 @@
+
 package com.wisetech.employee_management.service;
 
 import com.wisetech.employee_management.exception.ReadOnlyDepartmentException;
+import com.wisetech.employee_management.exception.ResourceAlreadyExistsException;
 import com.wisetech.employee_management.exception.ResourceNotFoundException;
 import com.wisetech.employee_management.persistence.Department;
 import com.wisetech.employee_management.persistence.DepartmentRepository;
@@ -10,14 +12,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class DepartmentServiceImplTest {
+public class DepartmentServiceImplTest {
 
     @Mock
     private DepartmentRepository departmentRepository;
@@ -25,130 +28,123 @@ class DepartmentServiceImplTest {
     @InjectMocks
     private DepartmentServiceImpl departmentService;
 
+    private Department department;
+
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         MockitoAnnotations.openMocks(this);
+        department = new Department();
+        department.setId(1L);
+        department.setName("HR");
+        department.setReadOnly(false);
     }
 
     @Test
-    void testCreateDepartment() {
-        Department department = new Department();
-        department.setName("HR");
+    public void testCreateDepartment() throws ResourceAlreadyExistsException {
+        when(departmentRepository.existsByName(anyString())).thenReturn(false);
 
-        when(departmentRepository.save(department)).thenReturn(department);
+        when(departmentRepository.save(any(Department.class))).thenReturn(department);
 
         Department createdDepartment = departmentService.createDepartment(department);
 
+        assertNotNull(createdDepartment);
         assertEquals("HR", createdDepartment.getName());
     }
 
     @Test
-    void testGetAllDepartments() {
-        Department department1 = new Department();
-        department1.setName("HR");
-        Department department2 = new Department();
-        department2.setName("IT");
+    public void testCreateDepartment_Exception() {
+        when(departmentRepository.existsByName(anyString())).thenReturn(true);
 
-        when(departmentRepository.findAll()).thenReturn(List.of(department1, department2));
-
-        List<Department> departments = departmentService.getAllDepartments();
-
-        assertEquals(2, departments.size());
-        assertEquals("HR", departments.get(0).getName());
-        assertEquals("IT", departments.get(1).getName());
+        assertThrows(
+                ResourceAlreadyExistsException.class,
+                () -> departmentService.createDepartment(department)
+        );
     }
 
     @Test
-    void testGetDepartmentById_Success() {
-        Department department = new Department();
-        department.setName("HR");
+    public void testGetAllDepartments() {
+        when(departmentRepository.findAll()).thenReturn(Arrays.asList(department));
 
+        List<Department> departments = departmentService.getAllDepartments();
+
+        assertFalse(departments.isEmpty());
+        assertEquals(1, departments.size());
+    }
+
+    @Test
+    public void testGetDepartmentById_ExistingId() throws ResourceNotFoundException {
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
 
         Department foundDepartment = departmentService.getDepartmentById(1L);
 
-        assertEquals("HR", foundDepartment.getName());
+        assertNotNull(foundDepartment);
+        assertEquals(department.getName(), foundDepartment.getName());
     }
 
     @Test
-    void testGetDepartmentById_NotFound() {
+    public void testGetDepartmentById_NonExistingId() {
         when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> departmentService.getDepartmentById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> {
+            departmentService.getDepartmentById(1L);
+        });
     }
 
     @Test
-    void testUpdateDepartment_Success() {
-        Department existingDepartment = new Department();
-        existingDepartment.setName("HR");
-        existingDepartment.setReadOnly(false);
+    public void testUpdateDepartment_Success() throws ResourceNotFoundException, ReadOnlyDepartmentException {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+
 
         Department updatedDepartment = new Department();
+        updatedDepartment.setId(1L);
         updatedDepartment.setName("Finance");
         updatedDepartment.setReadOnly(false);
 
-        when(departmentRepository.findById(1L)).thenReturn(Optional.of(existingDepartment));
-        when(departmentRepository.save(existingDepartment)).thenReturn(existingDepartment);
-        when(departmentRepository.existsByName("Finance")).thenReturn(false);
+        when(departmentRepository.save(any(Department.class))).thenReturn(updatedDepartment);
 
-        Department result = departmentService.updateDepartment(1L, updatedDepartment);
+        Department result = departmentService.updateDepartment(updatedDepartment);
 
         assertEquals("Finance", result.getName());
-        assertEquals(false, result.getReadOnly());
-
     }
 
     @Test
-    void testUpdateDepartment_ReadOnlyUpdateSuccess() {
-        Department existingDepartment = new Department();
-        existingDepartment.setName("HR");
-        existingDepartment.setReadOnly(true);
-
-        Department updatedDepartment = new Department();
-        updatedDepartment.setReadOnly(false); // Update to non-read-only
-
-        when(departmentRepository.findById(1L)).thenReturn(Optional.of(existingDepartment));
-        when(departmentRepository.save(any())).thenReturn(updatedDepartment);
-
-        Department result = departmentService.updateDepartment(1L, updatedDepartment);
-        assertEquals(false, result.getReadOnly());
-    }
-
-    @Test
-    void testUpdateDepartment_ReadOnlyException() {
-        Department existingDepartment = new Department();
-        existingDepartment.setReadOnly(true);
-        existingDepartment.setName("Hr");
-
-        Department updatedDepartment = new Department();
-        updatedDepartment.setReadOnly(true);
-
-        when(departmentRepository.findById(1L)).thenReturn(Optional.of(existingDepartment));
-
-        assertThrows(ReadOnlyDepartmentException.class, () -> departmentService.updateDepartment(1L, updatedDepartment));
-    }
-
-    @Test
-    void testDeleteDepartment_Success() {
-        Department department = new Department();
-        department.setReadOnly(false);
-
-        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-
-        departmentService.deleteDepartment(1L);
-
-        verify(departmentRepository, times(1)).findById(1L);
-        verify(departmentRepository, times(1)).delete(department);
-    }
-
-    @Test
-    void testDeleteDepartment_ReadOnlyException() {
-        Department department = new Department();
+    public void testUpdateDepartment_ReadOnlyException() {
         department.setReadOnly(true);
 
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
 
-        assertThrows(ReadOnlyDepartmentException.class, () -> departmentService.deleteDepartment(1L));
+        assertThrows(ReadOnlyDepartmentException.class, () -> {
+            departmentService.updateDepartment(department);
+        });
     }
 
+    @Test
+    public void testDeleteDepartment_Success() throws ResourceNotFoundException, ReadOnlyDepartmentException {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+
+        departmentService.deleteDepartment(1L);
+
+        // Verify that the delete method is called on the repository
+        verify(departmentRepository).delete(department);
+    }
+
+    @Test
+    public void testDeleteDepartment_ReadOnlyException() {
+        department.setReadOnly(true);
+
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+
+        assertThrows(ReadOnlyDepartmentException.class, () -> {
+            departmentService.deleteDepartment(1L);
+        });
+    }
+
+    @Test
+    public void testDeleteDepartment_NonExistingId() {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            departmentService.deleteDepartment(1L);
+        });
+    }
 }

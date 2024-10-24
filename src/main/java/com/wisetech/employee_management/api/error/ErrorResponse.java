@@ -1,4 +1,4 @@
-package com.wisetech.employee_management.exception.error;
+package com.wisetech.employee_management.api.error;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
