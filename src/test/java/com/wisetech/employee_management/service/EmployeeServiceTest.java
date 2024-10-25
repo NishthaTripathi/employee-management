@@ -88,6 +88,8 @@ public class EmployeeServiceTest {
         lenient().when(mockEmployeeRepository.findById(EMPLOYEE_EXISTING_ID)).thenReturn(Optional.of(existingEmployee));
         lenient().when(mockEmployeeRepository.save(existingEmployee)).thenReturn(existingEmployee);
         lenient().when(mockEmployeeRepository.findById(EMPLOYEE_NON_EXISTING_ID)).thenReturn(Optional.empty());
+        lenient().when(mockEmployeeRepository.existsById(EMPLOYEE_NON_EXISTING_ID)).thenReturn(false);
+        lenient().when(mockEmployeeRepository.existsById(EMPLOYEE_EXISTING_ID)).thenReturn(true);
     }
 
 
@@ -102,14 +104,14 @@ public class EmployeeServiceTest {
     }
 
     @Test
-    public void testCreateEmployee_withMandatoryDepartments_success() {
+    public void testCreateEmployee_departmentsExist_withMandatoryDepartments_success() {
         when(mockDepartmentRepository.findAllById(List.of(DepartmentServiceTest.DEPARTMENT_EXISTING_ID))).thenReturn(List.of(existingDepartment));
         assertDoesNotThrow(() -> ref.createEmployee(newEmployee));
         verify(mockEmployeeRepository).save(newEmployee);
     }
 
     @Test
-    public void testCreateEmployee_withNonExistingDepartments_failure() {
+    public void testCreateEmployee_departmentsNotExist_failure() {
         newEmployee.setDepartments((new HashSet<>(Set.of(nonExistingDepartment))));
         assertThrows(ResourceNotFoundException.class, () -> ref.createEmployee(newEmployee));
     }
@@ -128,19 +130,19 @@ public class EmployeeServiceTest {
     }
 
     @Test
-    public void testGetEmployeeById_idDoesNotExist_failure() {
+    public void testGetEmployeeById_idNotExist_failure() {
         assertThrows(ResourceNotFoundException.class, () -> ref.getEmployeeById(EMPLOYEE_NON_EXISTING_ID));
     }
 
     @Test
-    public void testUpdateEmployee_withMandatoryDepartments_success() {
+    public void testUpdateEmployee_idExists_withMandatoryDepartments_success() {
         when(mockDepartmentRepository.findAllById(List.of(DepartmentServiceTest.DEPARTMENT_EXISTING_ID))).thenReturn(List.of(existingDepartment));
         assertDoesNotThrow(() -> ref.updateEmployee(existingEmployee));
         verify(mockEmployeeRepository).save(existingEmployee);
     }
 
     @Test
-    public void testUpdateEmployee_employeeDoesNotExist_failure() {
+    public void testUpdateEmployee_employeeNotExist_failure() {
         assertThrows(ResourceNotFoundException.class, () -> ref.updateEmployee(newEmployee));
     }
 
@@ -151,14 +153,12 @@ public class EmployeeServiceTest {
 
     @Test
     public void testDeleteEmployee_idExists_success() {
-        when(mockEmployeeRepository.existsById(EMPLOYEE_EXISTING_ID)).thenReturn(true);
         assertDoesNotThrow(() -> ref.deleteEmployee(EMPLOYEE_EXISTING_ID));
         verify(mockEmployeeRepository).deleteById(EMPLOYEE_EXISTING_ID);
     }
 
     @Test
-    public void testDeleteEmployee_idDoesNotExist_failure() {
-        when(mockEmployeeRepository.existsById(EMPLOYEE_NON_EXISTING_ID)).thenReturn(false);
+    public void testDeleteEmployee_idNotExists_failure() {
         assertThrows(ResourceNotFoundException.class, () -> ref.deleteEmployee(EMPLOYEE_NON_EXISTING_ID));
         verify(mockEmployeeRepository, never()).deleteById(anyLong());
     }

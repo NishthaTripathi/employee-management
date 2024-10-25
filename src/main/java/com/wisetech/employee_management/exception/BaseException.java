@@ -12,5 +12,4 @@ public class BaseException extends Exception {
         super(message);
         this.errorCode = errorCode;
     }
-
 }

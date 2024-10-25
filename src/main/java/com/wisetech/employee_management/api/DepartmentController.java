@@ -6,7 +6,6 @@ import com.wisetech.employee_management.exception.ResourceNotFoundException;
 import com.wisetech.employee_management.persistence.Department;
 import com.wisetech.employee_management.service.DepartmentService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +18,7 @@ public class DepartmentController {
 
     private final DepartmentService departmentService;
 
-    public DepartmentController(@Autowired DepartmentService departmentService) {
+    public DepartmentController(DepartmentService departmentService) {
         this.departmentService = departmentService;
     }
 

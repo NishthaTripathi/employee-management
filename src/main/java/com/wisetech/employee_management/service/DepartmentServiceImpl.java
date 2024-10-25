@@ -23,7 +23,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public Department createDepartment(Department department) throws ResourceAlreadyExistsException {
         if (departmentRepository.existsByName(department.getName())) {
-            throw new ResourceAlreadyExistsException("Department",department.getName());
+            throw new ResourceAlreadyExistsException("Department", department.getName());
         }
         return departmentRepository.save(department);
     }

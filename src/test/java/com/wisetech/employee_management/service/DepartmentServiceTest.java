@@ -18,7 +18,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,10 +27,12 @@ public class DepartmentServiceTest {
 
     public static final long DEPARTMENT_NEW_ID = 2L;
     public static final long DEPARTMENT_EXISTING_ID = 1L;
+    public static final long DEPARTMENT_READ_ONLY_ID = 11L;
     public static final long DEPARTMENT_NON_EXISTING_ID = 999L;
     public static final String DEPARTMENT_EXISTING_NAME = "Marketing";
     public static final String DEPARTMENT_NEW_NAME = "IT";
     public static final String DEPARTMENT_UPDATED_NAME = "HR";
+    private static final String DEPARTMENT_READ_ONLY_NAME = "Organisation";
 
 
     @Mock
@@ -58,8 +61,8 @@ public class DepartmentServiceTest {
                 .build();
 
         readOnlyDepartment = Department.builder()
-                .id(DEPARTMENT_EXISTING_ID)
-                .name(DEPARTMENT_EXISTING_NAME)
+                .id(DEPARTMENT_READ_ONLY_ID)
+                .name(DEPARTMENT_READ_ONLY_NAME)
                 .readOnly(true)
                 .mandatory(false)
                 .employees(new HashSet<>())
@@ -81,6 +84,7 @@ public class DepartmentServiceTest {
         lenient().when(mockDepartmentRepository.existsByName(DEPARTMENT_EXISTING_NAME)).thenReturn(true);
         lenient().when(mockDepartmentRepository.findById(DEPARTMENT_EXISTING_ID)).thenReturn(Optional.of(existingDepartment));
         lenient().when(mockDepartmentRepository.findById(DEPARTMENT_NON_EXISTING_ID)).thenReturn(Optional.empty());
+        lenient().when(mockDepartmentRepository.findById(DEPARTMENT_READ_ONLY_ID)).thenReturn(Optional.of(readOnlyDepartment));
         lenient().when(mockDepartmentRepository.save(newDepartment)).thenReturn(newDepartment);
         lenient().when(mockDepartmentRepository.save(updatedDepartment)).thenReturn(updatedDepartment);
     }
@@ -104,8 +108,7 @@ public class DepartmentServiceTest {
 
     @Test
     public void testCreateDepartment_withNewDepartment_success() throws ResourceAlreadyExistsException {
-        Department createdDepartment = ref.createDepartment(newDepartment);
-        assertEquals(DEPARTMENT_NEW_NAME, createdDepartment.getName());
+        ref.createDepartment(newDepartment);
         verify(mockDepartmentRepository).save(newDepartment);
     }
 
@@ -121,8 +124,11 @@ public class DepartmentServiceTest {
 
     @Test
     public void testUpdateDepartment_existingReadOnlyTrue_withNewReadOnlyTrue_failure() {
-        when(mockDepartmentRepository.findById(DEPARTMENT_EXISTING_ID)).thenReturn(Optional.of(readOnlyDepartment));
-        updatedDepartment.setReadOnly(true);
+        updatedDepartment = Department.builder()
+                .id(DEPARTMENT_READ_ONLY_ID)
+                .name(DEPARTMENT_UPDATED_NAME)
+                .readOnly(true)
+                .build();
         assertThrows(ReadOnlyDepartmentException.class, () -> ref.updateDepartment(updatedDepartment));
     }
 

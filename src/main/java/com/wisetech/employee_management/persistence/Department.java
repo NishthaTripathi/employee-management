@@ -27,7 +27,7 @@ public class Department {
     @Column(name = "ID")
     private Long id;
 
-    @NotBlank( message = "Name can not be null or empty")
+    @NotBlank(message = "Name can not be null or empty")
     @Column(name = "NAME", nullable = false, unique = true)
     private String name;
 
@@ -36,7 +36,7 @@ public class Department {
     private Boolean mandatory = false;
 
     @NotNull(message = "Read_Only can not be null")
-    @Column(name = "READ_ONLY",nullable = false)
+    @Column(name = "READ_ONLY", nullable = false)
     private Boolean readOnly = false;
 
     @ManyToMany(mappedBy = "departments")
