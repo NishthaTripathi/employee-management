@@ -23,13 +23,11 @@ public class DepartmentController {
         this.departmentService = departmentService;
     }
 
-
     @GetMapping
     public ResponseEntity<List<Department>> getAllDepartments() {
         List<Department> departments = departmentService.getAllDepartments();
         return ResponseEntity.ok(departments);
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) throws ResourceNotFoundException {

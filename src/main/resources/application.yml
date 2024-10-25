@@ -11,8 +11,7 @@ spring:
     driverClassName: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: none
-    defer-datasource-initialization: true
+      ddl-auto: validate
 
   # == H2 DB CONFIGURATION == #
   h2:

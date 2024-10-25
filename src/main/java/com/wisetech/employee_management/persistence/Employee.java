@@ -4,8 +4,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
-
 import java.util.Set;
+
+import static jakarta.persistence.CascadeType.REMOVE;
 
 @Entity
 @Table(name = "EMPLOYEE")
@@ -23,15 +24,15 @@ public class Employee {
     @Column(name = "ID")
     private Long id;
 
-    @NotBlank( message = "First Name can not be null or empty")
+    @NotBlank(message = "First Name can not be null or empty")
     @Column(name = "NAME_FIRST", nullable = false)
-    private String firstName;
+    private String nameFirst;
 
-    @NotBlank( message = "Last Name can not be null or empty")
+    @NotBlank(message = "Last Name can not be null or empty")
     @Column(name = "NAME_LAST", nullable = false)
-    private String lastName;
+    private String nameLast;
 
-    @ManyToMany(cascade=CascadeType.REMOVE)
+    @ManyToMany(cascade = REMOVE)
     @JoinTable(
             name = "EMPLOYEE_DEPARTMENT",
             joinColumns = @JoinColumn(name = "ID_EMPLOYEE"), inverseJoinColumns = @JoinColumn(name = "ID_DEPARTMENT"))
